@@ -1,9 +1,5 @@
 import { IsEnum, IsOptional, IsString, Length } from 'class-validator';
-
-export enum ProjectStatus {
-  ACTIVE = 'ACTIVE',
-  ARCHIVED = 'ARCHIVED',
-}
+import { ProjectStatus } from '@prisma/client';
 
 export class CreateProjectDto {
   @IsString()

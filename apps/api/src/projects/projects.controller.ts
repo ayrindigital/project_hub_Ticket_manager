@@ -1,41 +1,58 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
+import { Project, ProjectStatus } from '@prisma/client';
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 
-interface Project {
-	id: number;
-	name: string;
-	description?: string;
-	status: string;
-}
-
 @Controller('projects')
 export class ProjectsController {
-	constructor(private readonly projectsService: ProjectsService) {}
+  constructor(private readonly projectsService: ProjectsService) {}
 
-	@Post()
-	create(@Body() dto: CreateProjectDto): Project {
-		return this.projectsService.create(dto);
-	}
+  @Post()
+  create(@Body() dto: CreateProjectDto): Promise<Project> {
+    return this.projectsService.create(dto);
+  }
 
-	@Get()
-	findAll(): Project[] {
-		return this.projectsService.findAll();
-	}
+  @Get()
+  findAll(@Query('status') status?: string): Promise<Project[]> {
+    if (!status) {
+      return this.projectsService.findAll();
+    }
 
-	@Get(':id')
-	findOne(@Param('id', ParseIntPipe) id: number): Project {
-		return this.projectsService.findOne(id);
-	}
+    if (!Object.values(ProjectStatus).includes(status as ProjectStatus)) {
+      throw new BadRequestException(
+        `status must be one of: ${Object.values(ProjectStatus).join(', ')}`,
+      );
+    }
 
-	@Patch(':id')
-	update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateProjectDto): Project {
-		return this.projectsService.update(id, dto);
-	}
+    return this.projectsService.findAll(status as ProjectStatus);
+  }
 
-	@Delete(':id')
-	remove(@Param('id', ParseIntPipe) id: number): Project {
-		return this.projectsService.archive(id);
-	}
+  @Get(':id')
+  findOne(@Param('id') id: string): Promise<Project> {
+    return this.projectsService.findOne(id);
+  }
+
+  @Patch(':id')
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateProjectDto,
+  ): Promise<Project> {
+    return this.projectsService.update(id, dto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string): Promise<Project> {
+    return this.projectsService.archive(id);
+  }
 }
