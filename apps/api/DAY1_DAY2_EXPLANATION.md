@@ -1,219 +1,242 @@
-# Day 1, Day 2, and Day 3 Explanation (Beginner Friendly)
+# Day 1 to Day 5 Explanation (Beginner Friendly)
 
-This file explains what you built, why each file exists, and how the files communicate.
+This file explains what was implemented, why each folder/file exists, and how the files communicate.
 
-Current scope: backend only (NestJS API). Next.js frontend starts later.
+Current scope: backend only (NestJS + PostgreSQL + Prisma).
 
 ## 1) Big Picture
 
-Your backend currently provides:
-- `GET /health`
-- `Projects` CRUD API
+Your backend now has 3 features:
+- Projects
+- Tickets
+- Comments
 
-Architecture idea in NestJS:
+NestJS architecture used:
 - Module = feature container
-- Controller = HTTP layer (receives requests)
+- Controller = HTTP layer (receives API request)
 - Service = business logic layer
-- DTO = validation rules for input
-- Prisma = database access layer (ORM)
+- DTO = input validation layer
+- Prisma = database access layer
 
-## 2) Day 1: What We Built
+## 2) Day 1 (Setup + Health)
 
-Goal: basic NestJS app should run.
+Goal: run a basic NestJS server.
 
-Done on Day 1:
-- NestJS project setup in `apps/api`
+Implemented:
 - App bootstrap in `src/main.ts`
-- Health endpoint in `src/app.controller.ts`
 - Root module in `src/app.module.ts`
-- Global validation pipe in `main.ts`
+- Health endpoint `GET /health` in `src/app.controller.ts`
+- Global validation pipe enabled in `main.ts`
 
-Why this matters:
-- You got a running server on port `3001`
-- You learned how a module/controller/service structure looks
+Result:
+- Server runs on port 3001
+- Basic NestJS project structure is ready
 
-## 3) Day 2: What We Built
+## 3) Day 2 (Projects CRUD + Validation)
 
-Goal: Projects feature with CRUD and validation.
+Goal: build projects feature with validation.
 
-Done on Day 2:
-- Created `projects` feature folder
-- Added DTOs for create and update
-- Added routes:
+Implemented:
+- `src/projects` module with controller + service
+- DTO validation for create/update
+- Endpoints:
   - `POST /projects`
   - `GET /projects`
   - `GET /projects/:id`
   - `PATCH /projects/:id`
-  - `DELETE /projects/:id` (soft delete via ARCHIVED)
+  - `DELETE /projects/:id` (soft delete by ARCHIVED)
 
-Important Day 2 behavior:
-- Storage was in-memory array
-- Data disappeared on server restart
+Result:
+- Project API works with validation
 
-## 4) Day 3: What We Implemented (Detailed)
+## 4) Day 3 (PostgreSQL + Prisma)
 
-Goal: replace in-memory storage with PostgreSQL persistence using Prisma.
+Goal: replace in-memory data with real DB persistence.
 
-### 4.1 Dependencies added
+Implemented:
+- Prisma setup:
+  - `prisma/schema.prisma`
+  - `.env.example`
+  - Prisma scripts in `package.json`
+- Prisma infrastructure:
+  - `src/prisma/prisma.module.ts`
+  - `src/prisma/prisma.service.ts`
+- Refactor ProjectsService to Prisma queries
+- Database migration executed successfully
 
-In `apps/api/package.json`:
-- `@prisma/client`
-- `prisma` (dev dependency)
+Result:
+- Projects are stored in PostgreSQL
+- Data persists across server restarts
 
-Scripts added:
-- `prisma:generate`
-- `prisma:migrate`
-- `prisma:studio`
+## 5) Day 4 (Tickets Module - Minimum Required)
 
-### 4.2 Prisma setup added
+Goal: add Tickets CRUD with Project relation and basic filtering.
 
-New files:
-- `prisma/schema.prisma`
-- `.env.example`
+### 5.1 Prisma schema changes
 
-Schema includes:
-- `Project` model with fields:
-  - `id` (UUID string)
-  - `name`
-  - `description`
-  - `status` enum (`ACTIVE`, `ARCHIVED`)
-  - `createdAt`
-  - `updatedAt`
+Added to `prisma/schema.prisma`:
+- `Ticket` model
+- `TicketStatus` enum
+- `Priority` enum
+- Relation: `Project (1) -> (many) Tickets`
 
-Why this is important:
-- Database now defines source of truth for project data
-- IDs are now UUID strings (not numeric auto-increment from memory array)
+Ticket model fields:
+- `id`
+- `title`
+- `description`
+- `status` (TODO/IN_PROGRESS/IN_REVIEW/DONE)
+- `priority` (LOW/MEDIUM/HIGH/URGENT)
+- `projectId`
+- `createdAt`
+- `updatedAt`
 
-### 4.3 Prisma module added to NestJS
+### 5.2 Tickets backend files
 
-New files:
-- `src/prisma/prisma.module.ts`
-- `src/prisma/prisma.service.ts`
+Created:
+- `src/tickets/tickets.module.ts`
+- `src/tickets/tickets.controller.ts`
+- `src/tickets/tickets.service.ts`
+- `src/tickets/dto/create-ticket.dto.ts`
+- `src/tickets/dto/update-ticket.dto.ts`
 
-What they do:
-- `PrismaService` extends `PrismaClient`
-- Connects on module init and disconnects on module destroy
-- `PrismaModule` is global, so other modules can use PrismaService
+Wired in app root:
+- `src/app.module.ts` imports `TicketsModule`
 
-### 4.4 App module wiring changed
+### 5.3 Tickets endpoints (minimum)
 
-File changed:
-- `src/app.module.ts`
+Implemented endpoints:
+- `POST /projects/:projectId/tickets`
+- `GET /projects/:projectId/tickets`
+- `GET /tickets`
+- `GET /tickets/:id`
+- `PATCH /tickets/:id`
+- `DELETE /tickets/:id`
 
-What changed:
-- `PrismaModule` imported into root module
-- This makes DB client available app-wide
+Supported filters:
+- `status`
+- `priority`
+- `projectId` (for `/tickets`)
+- basic sorting (`sortBy`, `sortOrder`)
 
-### 4.5 Projects service refactored from memory to DB
+Edge case handled:
+- Invalid `projectId` for ticket create/list returns `404`
 
-File changed:
-- `src/projects/projects.service.ts`
+## 6) Day 5 (Comments Module + Seed - Minimum Required)
 
-Before:
-- Used `projects[]` array in memory
+Goal: add Comments CRUD linked to Ticket and basic seed data.
 
-Now:
-- Uses `this.prisma.project.create/findMany/findUnique/update`
-- Data is read/written in PostgreSQL
-- `findAll` supports optional status filter
-- `archive` updates status to `ARCHIVED` in database
+### 6.1 Prisma schema changes
 
-### 4.6 Projects controller updated for DB IDs
+Added to `prisma/schema.prisma`:
+- `Comment` model
+- Relation: `Ticket (1) -> (many) Comments`
 
-File changed:
-- `src/projects/projects.controller.ts`
+Comment model fields:
+- `id`
+- `content`
+- `author`
+- `ticketId`
+- `createdAt`
+- `updatedAt`
 
-What changed:
-- ID param changed from `number` to `string` (UUID)
-- Added optional query filter: `GET /projects?status=ACTIVE`
-- Added status validation for query value
-- Return types now use Prisma `Project` model type
+### 6.2 Comments backend files
 
-### 4.7 DTO alignment
+Created:
+- `src/comments/comments.module.ts`
+- `src/comments/comments.controller.ts`
+- `src/comments/comments.service.ts`
+- `src/comments/dto/create-comment.dto.ts`
+- `src/comments/dto/update-comment.dto.ts`
 
-File changed:
-- `src/projects/dto/create-project.dto.ts`
+Wired in app root:
+- `src/app.module.ts` imports `CommentsModule`
 
-What changed:
-- `ProjectStatus` now imported from Prisma generated types
-- Keeps validation aligned with DB enum
+### 6.3 Comments endpoints (minimum)
 
-## 5) Request Flow After Day 3
+Implemented endpoints:
+- `POST /tickets/:ticketId/comments`
+- `GET /tickets/:ticketId/comments`
+- `PATCH /comments/:id`
+- `DELETE /comments/:id`
 
-Example: `POST /projects`
+Edge cases handled:
+- Invalid `ticketId` returns `404`
+- Invalid `comment id` returns `404`
 
-1. Request enters app in `main.ts`
-2. `ValidationPipe` validates request body against `CreateProjectDto`
-3. Router sends request to `ProjectsController.create`
-4. Controller calls `ProjectsService.create(dto)`
-5. Service uses `PrismaService` -> `prisma.project.create(...)`
-6. Prisma sends SQL to PostgreSQL
-7. Created row returned to API response
+### 6.4 Seed script (minimum)
 
-Now data persists across restarts if DB is configured correctly.
+Created:
+- `prisma/seed.js`
 
-## 6) Current Status and One Blocker
+Package scripts:
+- `prisma:seed`
+- Prisma `seed` config in `package.json`
 
-Day 3 code is implemented and builds successfully.
+What seed adds:
+- 1 project
+- 2 tickets
+- 3 comments
 
-Current blocker on your machine:
-- Prisma migration failed with `P1000` authentication error
-- Reason: PostgreSQL username/password in `DATABASE_URL` does not match local DB credentials
+This is intentionally minimal and beginner-friendly for Day 5.
 
-How to fix quickly:
-1. Check your real PostgreSQL username/password
-2. Update `.env` in `apps/api`
-3. Run:
-   - `pnpm prisma migrate dev --name init`
-   - `pnpm prisma generate`
+## 7) Request Flow (How files communicate now)
 
-## 7) Folder Purpose Map (Now Including Prisma)
+### Example A: Create ticket
 
-`src/main.ts`
-- Bootstraps Nest app and global validation
+`POST /projects/:projectId/tickets`
 
-`src/app.module.ts`
-- Root module, imports feature modules
+Flow:
+1. Request enters Nest app in `main.ts`
+2. DTO validates body in controller
+3. Controller method in `tickets.controller.ts` calls service
+4. Service in `tickets.service.ts` checks project exists
+5. Service writes ticket using Prisma (`prisma.ticket.create`)
+6. PostgreSQL stores data
+7. API returns created ticket JSON
 
-`src/prisma/prisma.module.ts`
-- Exposes PrismaService globally
+### Example B: Add comment
 
-`src/prisma/prisma.service.ts`
-- Database client lifecycle management
+`POST /tickets/:ticketId/comments`
 
-`src/projects/projects.module.ts`
-- Projects feature wiring
+Flow:
+1. Request hits `comments.controller.ts`
+2. DTO validates `author` and `content`
+3. Service checks ticket exists
+4. Service inserts row via `prisma.comment.create`
+5. API returns created comment JSON
 
-`src/projects/projects.controller.ts`
-- HTTP routes for projects
+## 8) Current Folder Map (Day 1 to Day 5)
 
-`src/projects/projects.service.ts`
-- Business logic + Prisma DB calls
+- `src/main.ts` -> app startup + global validation
+- `src/app.module.ts` -> root module, imports all feature modules
+- `src/prisma/*` -> Prisma client lifecycle and DI export
+- `src/projects/*` -> project APIs
+- `src/tickets/*` -> ticket APIs (Day 4)
+- `src/comments/*` -> comment APIs (Day 5)
+- `prisma/schema.prisma` -> DB models and enums
+- `prisma/migrations/*` -> DB migration history
+- `prisma/seed.js` -> minimal seed data script
 
-`src/projects/dto/create-project.dto.ts`
-- Validation rules for create request
+## 9) Commands You Need (Day 4 and Day 5)
 
-`src/projects/dto/update-project.dto.ts`
-- Partial validation rules for update request
+Run in `apps/api`:
 
-`prisma/schema.prisma`
-- Database model and enums
+1. `pnpm prisma migrate dev --name add-tickets-comments`
+2. `pnpm prisma generate`
+3. `pnpm prisma:seed`
+4. `pnpm start:dev`
 
-`.env.example`
-- Example DB connection string
+## 10) What is intentionally kept basic
 
-## 8) Django/Flask Mapping (Day 3 View)
+To keep this fresher-friendly, this implementation avoids advanced patterns:
+- No auth
+- No pagination layer
+- No repository abstraction
+- No event system
+- No background jobs
 
-Django:
-- Serializer + model validation = DTO + Prisma model
-- ORM query in view/service = Prisma query in Nest service
+Only the minimum needed Day 4 and Day 5 backend work is implemented.
 
-Flask:
-- Route function = controller method
-- DB session queries = Prisma calls in service
+## 11) One Sentence Summary
 
-You already know the concepts. Day 3 mostly changed the storage layer.
-
-## 9) One Sentence Summary
-
-By Day 3, you upgraded the Projects API from temporary in-memory data to a real PostgreSQL-backed architecture using Prisma, with cleaner layering and persistent storage.
+By Day 5, you now have a complete minimal backend flow: Project -> Ticket -> Comment with PostgreSQL persistence, Prisma migrations, basic filtering, and seed data.
