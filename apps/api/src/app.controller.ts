@@ -7,5 +7,5 @@ export class AppController {
   getHealth() {
     return { status: "ok" };
   }
-
+  
 }
