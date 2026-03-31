@@ -5,7 +5,7 @@ WITH generated_vector AS (
   SELECT (
     '[' ||
     array_to_string(
-      ARRAY(SELECT '0.001' FROM generate_series(1, 1536)),
+      ARRAY(SELECT '0.001' FROM generate_series(1, 3072)),
       ','
     ) ||
     ']'
@@ -32,7 +32,7 @@ WITH query_vector AS (
   SELECT (
     '[' ||
     array_to_string(
-      ARRAY(SELECT '0.001' FROM generate_series(1, 1536)),
+      ARRAY(SELECT '0.001' FROM generate_series(1, 3072)),
       ','
     ) ||
     ']'

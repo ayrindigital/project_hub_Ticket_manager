@@ -32,7 +32,7 @@ pnpm install
 ```
 
 3. Ensure `.env` has correct `DATABASE_URL`.
-   - For Day 10 embedding script, also add `OPENAI_API_KEY`.
+   - For Day 10 embedding script, also add `GEMINI_API_KEY`.
 4. Run migration + Prisma client generation:
 
 ```powershell
@@ -483,7 +483,7 @@ Once both API and web are running:
    - Verify the ticket card comment count updates after comment changes.
 
 6. For Day 10 embedding verification:
-   - Add `OPENAI_API_KEY` to `apps/api/.env`.
+   - Add `GEMINI_API_KEY` to `apps/api/.env`.
    - Run `pnpm embeddings:test`.
    - Verify the script:
      - prints vector length and preview values
@@ -524,6 +524,7 @@ You fully verified Day 1 to Day 10 if:
 - Seed data contains multiple realistic projects, tickets, and comments
 - `Embedding` schema and migration files exist for Day 10
 - `pnpm embeddings:test` can generate vectors, store them in PostgreSQL, and query them back with similarity search
+- Gemini verification has been completed against the local PostgreSQL 18.3 setup with pgvector installed
 
 ## 9) Day-Wise Files, Purpose, and Communication
 
@@ -756,21 +757,22 @@ Implementation note:
 Files created/updated:
 - `prisma/schema.prisma`
 - `prisma/migrations/20260329090000_add_embeddings/migration.sql`
+- `prisma/migrations/20260331110000_switch_to_gemini_embeddings/migration.sql`
 - `scripts/test-embeddings.ts`
 - `scripts/pgvector-example.sql`
 - `package.json`
 
 Purpose:
-- `schema.prisma`: adds the `Embedding` model with a pgvector-backed `vector(1536)` field.
-- `migration.sql`: creates the `vector` extension and the `Embedding` table/index.
-- `test-embeddings.ts`: standalone script that loads sample ticket titles, generates embeddings with `text-embedding-3-small`, prints vector previews, compares cosine similarity, stores the generated vectors in PostgreSQL, and performs similarity search against the `Embedding` table.
-- `pgvector-example.sql`: raw SQL reference for inserting a valid `vector(1536)` row and doing similarity search with `<=>`.
-- `package.json`: adds the `embeddings:test` script and the OpenAI/LangChain dependencies needed for Day 10 work.
+- `schema.prisma`: adds the `Embedding` model with a pgvector-backed `vector(3072)` field for Gemini embeddings.
+- `migration.sql`: first creates the `vector` extension and the `Embedding` table/index, then switches the embedding column to Gemini-sized vectors.
+- `test-embeddings.ts`: standalone script that loads sample ticket titles, generates embeddings with `gemini-embedding-001`, prints vector previews, compares cosine similarity, stores the generated vectors in PostgreSQL, and performs similarity search against the `Embedding` table.
+- `pgvector-example.sql`: raw SQL reference for inserting a valid `vector(3072)` row and doing similarity search with `<=>`.
+- `package.json`: adds the `embeddings:test` script and the Gemini/LangChain dependencies needed for Day 10 work.
 
 Communication flow (Day 10 backend):
 1. Developer runs `pnpm embeddings:test` from `apps/api`.
-2. The script loads `.env`, checks `OPENAI_API_KEY`, and creates an `OpenAIEmbeddings` client.
-3. Sample ticket titles are embedded with `text-embedding-3-small`.
+2. The script loads `.env`, checks `GEMINI_API_KEY`, and creates Gemini embedding clients for document and query retrieval tasks.
+3. Sample ticket titles are embedded with `gemini-embedding-001`.
 4. The script prints vector length/previews and cosine similarity comparisons.
 5. The script ensures the `vector` extension exists in PostgreSQL.
 6. The script inserts generated vectors into the `Embedding` table using raw SQL and pgvector casting.
@@ -779,8 +781,14 @@ Communication flow (Day 10 backend):
 
 Implementation note:
 - Day 10 schema, script, and raw SQL example are implemented.
-- The script requires `OPENAI_API_KEY` in `apps/api/.env`.
+- The script requires `GEMINI_API_KEY` in `apps/api/.env`.
 - Without that key, the script fails fast with a clear configuration error before making API calls.
+- Verified locally after pgvector installation:
+  - `CREATE EXTENSION vector;` works on PostgreSQL 18.3
+  - `pnpm prisma:migrate` applies both embedding migrations
+  - `pnpm embeddings:test` completes successfully with `gemini-embedding-001`
+  - generated vectors are length `3072`
+  - similarity search returns the expected authentication-related match near the top
 
 ## 10) Database Setup and How It Works (Day 3 Onward)
 
@@ -790,7 +798,7 @@ Implementation note:
 2. Put DB URL in `.env`:
    - `DATABASE_URL="postgresql://<user>:<password>@localhost:5432/projecthub_dev?schema=public"`
 3. For Day 10, also add:
-   - `OPENAI_API_KEY="<your-openai-key>"`
+   - `GEMINI_API_KEY="<your-gemini-key>"`
 4. Run migration:
    - `pnpm prisma:migrate`
 5. Generate Prisma client:

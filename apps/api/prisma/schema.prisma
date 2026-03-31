@@ -47,7 +47,7 @@ model Comment {
 model Embedding {
   id         String                    @id @default(uuid())
   content    String
-  embedding  Unsupported("vector(1536)")
+  embedding  Unsupported("vector(3072)")
   sourceType String
   sourceId   String
   metadata   Json?

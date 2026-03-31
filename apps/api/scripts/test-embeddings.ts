@@ -1,7 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { PrismaClient } from '@prisma/client';
-import { OpenAIEmbeddings } from '@langchain/openai';
+import { TaskType } from '@google/generative-ai';
+import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai';
 
 const sampleTitles = [
   'Fix login bug',
@@ -67,22 +68,31 @@ function cosineSimilarity(a: number[], b: number[]): number {
 async function main(): Promise<void> {
   loadDotEnvFile();
 
-  if (!process.env.OPENAI_API_KEY) {
+  const geminiApiKey =
+    process.env.GEMINI_API_KEY ?? process.env.GOOGLE_API_KEY;
+
+  if (!geminiApiKey) {
     throw new Error(
-      'OPENAI_API_KEY is missing. Add it to apps/api/.env before running embeddings:test.',
+      'GEMINI_API_KEY is missing. Add it to apps/api/.env before running embeddings:test.',
     );
   }
 
-  const embeddings = new OpenAIEmbeddings({
-    model: 'text-embedding-3-small',
-    apiKey: process.env.OPENAI_API_KEY,
+  const documentEmbeddings = new GoogleGenerativeAIEmbeddings({
+    apiKey: geminiApiKey,
+    model: 'gemini-embedding-001',
+    taskType: TaskType.RETRIEVAL_DOCUMENT,
+  });
+  const queryEmbeddings = new GoogleGenerativeAIEmbeddings({
+    apiKey: geminiApiKey,
+    model: 'gemini-embedding-001',
+    taskType: TaskType.RETRIEVAL_QUERY,
   });
 
-  console.log('Generating embeddings with text-embedding-3-small...\n');
+  console.log('Generating embeddings with gemini-embedding-001...\n');
 
-  const vectors = await embeddings.embedDocuments(sampleTitles);
+  const vectors = await documentEmbeddings.embedDocuments(sampleTitles);
   const queryText = 'Authentication sign in issue';
-  const queryVector = await embeddings.embedQuery(queryText);
+  const queryVector = await queryEmbeddings.embedQuery(queryText);
 
   sampleTitles.forEach((title, index) => {
     const preview = vectors[index].slice(0, 6).map((value) => value.toFixed(4));
