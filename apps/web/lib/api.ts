@@ -105,10 +105,21 @@ export interface ChatMessage {
   createdAt: string;
 }
 
-export const API_BASE_URL =
+const PUBLIC_API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+const INTERNAL_API_BASE_URL =
+  process.env.API_INTERNAL_URL ?? 'http://localhost:3001';
+
+export const API_BASE_URL =
+  typeof window === 'undefined'
+    ? INTERNAL_API_BASE_URL
+    : PUBLIC_API_BASE_URL;
+
+const API_TIMEOUT_MS = 20_000;
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
   const headers = new Headers(options.headers);
   const body =
     options.body && typeof options.body === 'object' && !(options.body instanceof FormData)
@@ -119,23 +130,38 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     headers.set('Content-Type', 'application/json');
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    cache: 'no-store',
-    ...options,
-    headers,
-    body,
-  });
+  try {
+    const response = await fetch(`${API_BASE_URL}${path}`, {
+      cache: 'no-store',
+      ...options,
+      headers,
+      body,
+      signal: controller.signal,
+    });
 
-  const payload = (await response.json()) as ApiResponse<T>;
+    const payload = (await response.json()) as ApiResponse<T>;
 
-  if (!response.ok) {
-    const message = Array.isArray(payload.message)
-      ? payload.message.join(', ')
-      : payload.message;
-    throw new ApiError(message || `API request failed for ${path}`, response.status);
+    if (!response.ok) {
+      const message = Array.isArray(payload.message)
+        ? payload.message.join(', ')
+        : payload.message;
+      throw new ApiError(message || `API request failed for ${path}`, response.status);
+    }
+
+    return payload.data;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new ApiError(`API request timed out for ${path}`, 504);
+    }
+
+    throw new ApiError(`API request failed for ${path}`, 500);
+  } finally {
+    clearTimeout(timeout);
   }
-
-  return payload.data;
 }
 
 export async function getProjects(status?: ProjectStatus): Promise<ProjectSummary[]> {

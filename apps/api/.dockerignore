@@ -1,0 +1,7 @@
+node_modules
+dist
+.env
+.api_out.log
+.api_err.log
+coverage
+.git

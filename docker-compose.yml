@@ -1,0 +1,58 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: project-hub-db
+    environment:
+      POSTGRES_DB: projecthub
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - projecthub_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d projecthub"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build:
+      context: ./apps/api
+    container_name: project-hub-api
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/projecthub?schema=public
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      CHAT_AGENT_OFFLINE: ${CHAT_AGENT_OFFLINE:-false}
+      SEED_ON_STARTUP: ${SEED_ON_STARTUP:-true}
+      PORT: 3001
+    ports:
+      - "3001:3001"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://localhost:3001/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\"",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  web:
+    build:
+      context: ./apps/web
+    container_name: project-hub-web
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      API_INTERNAL_URL: http://api:3001
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  projecthub_db_data:
