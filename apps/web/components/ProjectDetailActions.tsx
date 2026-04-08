@@ -44,7 +44,7 @@ export function ProjectDetailActions({ project }: ProjectDetailActionsProps) {
             setError(null);
             setIsEditing((value) => !value);
           }}
-          className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
+          className="rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-medium text-slate-300 transition hover:border-slate-600 hover:text-slate-100"
         >
           {isEditing ? 'Close Editor' : 'Edit Project'}
         </button>
@@ -70,7 +70,7 @@ export function ProjectDetailActions({ project }: ProjectDetailActionsProps) {
       ) : null}
 
       {isEditing ? (
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+        <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
           <p className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
             Edit Project
           </p>

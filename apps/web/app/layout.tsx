@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { IBM_Plex_Mono, Space_Grotesk } from 'next/font/google';
-import { Sidebar } from '@/components/Sidebar';
+import { AppShell } from '@/components/AppShell';
 import './globals.css';
 
 const spaceGrotesk = Space_Grotesk({
@@ -25,12 +25,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body className={`${spaceGrotesk.variable} ${ibmPlexMono.variable} antialiased`}>
-        <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#fef3c7,transparent_55%),radial-gradient(circle_at_bottom_right,#dbeafe,transparent_60%),#f8fafc]">
-          <div className="mx-auto flex min-h-screen max-w-7xl flex-col md:flex-row">
-            <Sidebar />
-            <main className="flex-1 px-4 py-6 md:px-8">{children}</main>
+        <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#0f172a,transparent_45%),radial-gradient(circle_at_bottom_right,#1e293b,transparent_50%),#020617]">
+          <div className="mx-auto min-h-screen w-full">
+            <AppShell>{children}</AppShell>
           </div>
         </div>
       </body>

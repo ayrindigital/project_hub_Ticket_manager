@@ -77,6 +77,7 @@ export class TicketsService {
     sortOrder: 'asc' | 'desc' = 'desc',
   ): Promise<TicketListQueryResult[]> {
     await this.ensureProjectExists(projectId);
+    await this.promoteCommentedTodoTickets(projectId);
     const tickets = await this.prisma.ticket.findMany({
       where: {
         projectId,
@@ -97,6 +98,7 @@ export class TicketsService {
     if (options.projectId) {
       await this.ensureProjectExists(options.projectId);
     }
+    await this.promoteCommentedTodoTickets(options.projectId);
 
     const sortBy = options.sortBy ?? 'createdAt';
     const sortOrder = options.sortOrder ?? 'desc';
@@ -118,6 +120,19 @@ export class TicketsService {
   }
 
   async findOne(id: string): Promise<TicketDetailQueryResult> {
+    await this.prisma.ticket.updateMany({
+      where: {
+        id,
+        status: TicketStatus.TODO,
+        comments: {
+          some: {},
+        },
+      },
+      data: {
+        status: TicketStatus.IN_PROGRESS,
+      },
+    });
+
     const ticket = await this.prisma.ticket.findUnique({
       where: { id },
       include: {
@@ -193,6 +208,21 @@ export class TicketsService {
     await this.eventEmitter.emitAsync(EMBEDDING_PROJECT_SYNC_EVENT, {
       projectId,
       reason,
+    });
+  }
+
+  private async promoteCommentedTodoTickets(projectId?: string): Promise<void> {
+    await this.prisma.ticket.updateMany({
+      where: {
+        projectId,
+        status: TicketStatus.TODO,
+        comments: {
+          some: {},
+        },
+      },
+      data: {
+        status: TicketStatus.IN_PROGRESS,
+      },
     });
   }
 }

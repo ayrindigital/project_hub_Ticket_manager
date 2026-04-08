@@ -85,17 +85,30 @@ function sourceLabel(source: ChatSourceReference): string {
       ? source.metadata.ticketTitle
       : null;
 
-  if (ticketTitle && projectName) {
-    return `Ticket: ${ticketTitle} (${projectName})`;
+  if (source.sourceType === 'ticket') {
+    const title =
+      ticketTitle ??
+      source.snippet.split(':')[0]?.split('(')[0]?.trim() ??
+      source.sourceId;
+    return projectName ? `${title} - ${projectName}` : title;
   }
-  if (ticketTitle) {
-    return `Ticket: ${ticketTitle}`;
-  }
+
   if (projectName) {
     return `Project: ${projectName}`;
   }
 
   return `${source.sourceType} ${source.sourceId}`;
+}
+
+function normalizeAssistantContent(content: string): string {
+  let cleaned = content;
+
+  cleaned = cleaned.replace(/(?:^|\n)Tool observations:[\s\S]*?(?=\nSources:|$)/i, '');
+  cleaned = cleaned.replace(/(?:^|\n)Sources:[\s\S]*$/i, '');
+  cleaned = cleaned.replace(/^Answer for:\s*/i, '');
+  cleaned = cleaned.replace(/\n{3,}/g, '\n\n').trim();
+
+  return cleaned;
 }
 
 function sourceHref(source: ChatSourceReference): string | null {
@@ -398,139 +411,139 @@ export default function ChatPage() {
   }
 
   return (
-    <section className="flex min-h-[75vh] flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-6">
-      <header className="flex flex-wrap items-start justify-between gap-3">
+    <section className="flex min-h-[calc(100vh-7rem)] flex-col">
+      <header className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Day 13 Chat UI</p>
-          <h2 className="mt-2 text-2xl font-semibold text-slate-900">AI Project Assistant</h2>
-          <p className="mt-1 text-sm text-slate-600">Session: {sessionId || 'initializing...'}</p>
+          <h2 className="text-2xl font-semibold text-slate-100">AI Project Assistant</h2>
+          <p className="mt-1 text-sm text-slate-500">Session: {sessionId || 'initializing...'}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => void handleNewConversation()}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
+            className="rounded-lg border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-slate-300 transition hover:border-slate-600 hover:text-slate-100"
           >
-            New Conversation
+            New Chat
           </button>
           <button
             type="button"
             disabled={!sessionId || isStreaming}
             onClick={() => void handleClearCurrentConversation()}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-700 transition hover:border-slate-400 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-lg border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-slate-300 transition hover:border-slate-600 hover:text-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Clear Current
+            Clear
           </button>
         </div>
       </header>
 
-      <div className="mt-5 flex-1 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50 p-3 md:p-4">
-        {isLoadingHistory ? (
-          <p className="text-sm text-slate-500">Loading chat history...</p>
-        ) : messages.length === 0 ? (
-          <div className="space-y-3">
-            <p className="text-sm text-slate-600">
-              Ask about projects, tickets, and comments. Suggested starters:
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {suggestedQuestions.map((question) => (
-                <button
-                  key={question}
-                  type="button"
-                  onClick={() => setInput(question)}
-                  className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
-                >
-                  {question}
-                </button>
-              ))}
+      <div className="mx-auto mt-6 flex w-full max-w-5xl flex-1 flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/40">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6">
+          {isLoadingHistory ? (
+            <p className="text-sm text-slate-500">Loading chat history...</p>
+          ) : messages.length === 0 ? (
+            <div className="mx-auto max-w-3xl space-y-5 py-10 text-center">
+              <h3 className="text-2xl font-semibold text-slate-100">How can I help today?</h3>
+              <p className="text-sm text-slate-500">
+                Ask about projects, ticket status, blockers, and recent comment activity.
+              </p>
+              <div className="grid gap-2 text-left md:grid-cols-3">
+                {suggestedQuestions.map((question) => (
+                  <button
+                    key={question}
+                    type="button"
+                    onClick={() => setInput(question)}
+                    className="rounded-xl border border-slate-700 bg-slate-900/70 p-3 text-sm text-slate-300 transition hover:border-slate-600 hover:text-slate-100"
+                  >
+                    {question}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {messages.map((message) => (
-              <article
-                key={message.id}
-                className={`rounded-xl border p-3 ${
-                  message.role === 'user'
-                    ? 'border-sky-200 bg-sky-50'
-                    : 'border-slate-200 bg-white'
-                }`}
-              >
-                <p className="text-xs uppercase tracking-[0.16em] text-slate-500">
-                  {message.role === 'user' ? 'You' : 'Assistant'}
-                </p>
-                <p className="mt-2 whitespace-pre-wrap text-sm text-slate-800">
-                  {message.content || (isStreaming ? 'Thinking...' : '')}
-                </p>
-                {message.role === 'assistant' && message.sources.length > 0 ? (
-                  <div className="mt-3 border-t border-slate-200 pt-3">
-                    <p className="text-xs font-medium uppercase tracking-[0.16em] text-slate-500">
-                      Sources
-                    </p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {message.sources.map((source, index) => {
-                        const href = sourceHref(source);
-                        const label = sourceLabel(source);
-                        const key = `${source.sourceType}-${source.sourceId}-${index}`;
+          ) : (
+            <div className="mx-auto w-full max-w-4xl space-y-5">
+              {messages.map((message) => {
+                const isUser = message.role === 'user';
+                const displayText =
+                  message.role === 'assistant'
+                    ? normalizeAssistantContent(message.content) || (isStreaming ? 'Thinking...' : '')
+                    : message.content || (isStreaming ? 'Thinking...' : '');
 
-                        return href ? (
-                          <Link
-                            key={key}
-                            href={href}
-                            className="rounded-md border border-slate-300 bg-slate-50 px-2 py-1 text-xs text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
-                          >
-                            {label}
-                          </Link>
-                        ) : (
-                          <span
-                            key={key}
-                            className="rounded-md border border-slate-300 bg-slate-50 px-2 py-1 text-xs text-slate-700"
-                          >
-                            {label}
-                          </span>
-                        );
-                      })}
+                return (
+                  <article
+                    key={message.id}
+                    className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[88%] rounded-2xl px-4 py-3 md:max-w-[80%] ${
+                        isUser
+                          ? 'border border-sky-500/40 bg-sky-500/15 text-sky-50'
+                          : 'border border-slate-800 bg-slate-900 text-slate-100'
+                      }`}
+                    >
+                      <p className="whitespace-pre-wrap text-sm leading-7">{displayText}</p>
+                      {message.role === 'assistant' && message.sources.length > 0 ? (
+                        <div className="mt-3 border-t border-slate-800 pt-3">
+                          <div className="flex flex-wrap gap-2">
+                            {message.sources.map((source, index) => {
+                              const href = sourceHref(source);
+                              const label = sourceLabel(source);
+                              const key = `${source.sourceType}-${source.sourceId}-${index}`;
+                              const isTicket = source.sourceType === 'ticket';
+                              const chipClass = isTicket
+                                ? 'rounded-full border border-sky-500/40 bg-sky-500/10 px-3 py-1.5 text-xs font-medium text-sky-100 transition hover:border-sky-400 hover:bg-sky-500/20'
+                                : 'rounded-full border border-slate-700 bg-slate-900/50 px-3 py-1.5 text-xs text-slate-300 transition hover:border-slate-600 hover:text-slate-100';
+
+                              return href ? (
+                                <Link key={key} href={href} className={chipClass}>
+                                  {label}
+                                </Link>
+                              ) : (
+                                <span key={key} className={chipClass}>
+                                  {label}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ) : null}
                     </div>
-                  </div>
-                ) : null}
-              </article>
-            ))}
-          </div>
-        )}
-        <div ref={endRef} />
-      </div>
-
-      {error ? (
-        <p className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-          {error}
-        </p>
-      ) : null}
-
-      <form onSubmit={handleSubmit} className="mt-4">
-        <label className="block">
-          <span className="mb-1 block text-xs uppercase tracking-[0.16em] text-slate-500">
-            Message
-          </span>
-          <textarea
-            rows={3}
-            value={input}
-            onChange={(event) => setInput(event.target.value)}
-            onKeyDown={onInputKeyDown}
-            placeholder="Ask about project status, ticket updates, or recent comments..."
-            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
-          />
-        </label>
-        <div className="mt-3 flex items-center justify-between gap-3">
-          <p className="text-xs text-slate-500">Enter to send, Shift+Enter for newline.</p>
-          <button
-            type="submit"
-            disabled={!canSend}
-            className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-400"
-          >
-            {isStreaming ? 'Streaming...' : 'Send'}
-          </button>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+          <div ref={endRef} />
         </div>
-      </form>
+
+        <div className="border-t border-slate-800 bg-slate-900/70 p-3 md:p-4">
+          {error ? (
+            <p className="mb-3 rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
+              {error}
+            </p>
+          ) : null}
+
+          <form onSubmit={handleSubmit} className="mx-auto w-full max-w-4xl">
+            <div className="flex items-end gap-2 rounded-2xl border border-slate-700 bg-slate-900 px-3 py-2">
+              <textarea
+                rows={1}
+                value={input}
+                onChange={(event) => setInput(event.target.value)}
+                onKeyDown={onInputKeyDown}
+                placeholder="Message AI Project Assistant..."
+                className="max-h-40 min-h-10 w-full resize-y bg-transparent px-1 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500"
+              />
+              <button
+                type="submit"
+                disabled={!canSend}
+                className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-500 disabled:cursor-not-allowed disabled:bg-sky-900"
+              >
+                {isStreaming ? '...' : 'Send'}
+              </button>
+            </div>
+            <p className="mt-2 text-xs text-slate-500">Enter to send, Shift+Enter for newline.</p>
+          </form>
+        </div>
+      </div>
     </section>
   );
 }

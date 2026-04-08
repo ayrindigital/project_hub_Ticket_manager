@@ -15,6 +15,21 @@ interface TicketCommentsProps {
   onCommentCountChange: (nextCount: number) => void;
 }
 
+const commentDateTimeFormatter = new Intl.DateTimeFormat('en-GB', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hour12: false,
+  timeZone: 'UTC',
+});
+
+function formatCommentDateTime(value: string): string {
+  return commentDateTimeFormatter.format(new Date(value));
+}
+
 export function TicketComments({
   ticketId,
   onCommentCountChange,
@@ -169,73 +184,71 @@ export function TicketComments({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Day 9 Comments UI</p>
-          <h5 className="mt-1 text-lg font-semibold text-slate-900">Comments</h5>
+          <h5 className="mt-1 text-lg font-semibold text-slate-100">Comments</h5>
         </div>
-        <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">
+        <span className="rounded-full border border-slate-700 bg-slate-800 px-2.5 py-1 text-xs text-slate-400">
           {comments.length}
         </span>
       </div>
 
       {error ? (
-        <p className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+        <p className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
           {error}
         </p>
       ) : null}
 
       {isLoading ? (
-        <div className="space-y-3">
+        <div className="space-y-2 rounded-xl border border-slate-800 bg-slate-900/40 p-3">
           {Array.from({ length: 2 }).map((_, index) => (
-            <div key={index} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <div className="h-4 w-28 animate-pulse rounded bg-slate-200" />
-              <div className="mt-3 h-4 w-full animate-pulse rounded bg-slate-100" />
-              <div className="mt-2 h-4 w-4/5 animate-pulse rounded bg-slate-100" />
+            <div key={index} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3">
+              <div className="h-4 w-28 animate-pulse rounded bg-slate-700" />
+              <div className="mt-3 h-4 w-full animate-pulse rounded bg-slate-800" />
             </div>
           ))}
         </div>
       ) : comments.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+        <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900/40 p-4 text-sm text-slate-400">
           No comments yet. Add the first update below.
         </div>
       ) : (
-        <div className="space-y-3">
-          {comments.map((comment) => {
+        <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/30">
+          {comments.map((comment, index) => {
             const isEditing = editingCommentId === comment.id;
 
             return (
               <article
                 key={comment.id}
-                className="rounded-xl border border-slate-200 bg-slate-50 p-4"
+                className={`p-3 ${index !== comments.length - 1 ? 'border-b border-slate-800' : ''}`}
               >
                 {isEditing ? (
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     <input
                       value={editingAuthor}
                       onChange={(event) => setEditingAuthor(event.target.value)}
-                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
+                      className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-sky-500/70"
                     />
                     <textarea
                       value={editingContent}
                       onChange={(event) => setEditingContent(event.target.value)}
                       rows={3}
-                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
+                      className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-sky-500/70"
                     />
-                    <div className="flex flex-wrap gap-3">
+                    <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
                         onClick={() => handleSaveComment(comment.id)}
                         disabled={isSubmitting}
-                        className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-wait disabled:bg-slate-400"
+                        className="rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-sky-500 disabled:cursor-wait disabled:opacity-70"
                       >
                         {isSubmitting ? 'Saving...' : 'Save'}
                       </button>
                       <button
                         type="button"
                         onClick={() => setEditingCommentId(null)}
-                        className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
+                        className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:border-slate-600 hover:text-slate-100"
                       >
                         Cancel
                       </button>
@@ -244,13 +257,13 @@ export function TicketComments({
                 ) : (
                   <>
                     <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">{comment.author}</p>
-                        <p className="mt-1 text-xs text-slate-500">
-                          {new Date(comment.updatedAt).toLocaleString()}
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-slate-100">{comment.author}</p>
+                        <p className="mt-0.5 text-xs text-slate-500">
+                          {formatCommentDateTime(comment.updatedAt)}
                         </p>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex shrink-0 gap-2">
                         <button
                           type="button"
                           onClick={() => {
@@ -259,20 +272,20 @@ export function TicketComments({
                             setEditingContent(comment.content);
                             setError(null);
                           }}
-                          className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
+                          className="rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-xs font-medium text-slate-300 transition hover:border-slate-600 hover:text-slate-100"
                         >
                           Edit
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDeleteComment(comment.id)}
-                          className="rounded-md bg-rose-600 px-2 py-1 text-xs font-medium text-white transition hover:bg-rose-700"
+                          className="rounded-md bg-rose-600 px-2 py-1 text-xs font-medium text-white transition hover:bg-rose-500"
                         >
                           Delete
                         </button>
                       </div>
                     </div>
-                    <p className="mt-3 text-sm text-slate-600">{comment.content}</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-300">{comment.content}</p>
                   </>
                 )}
               </article>
@@ -283,29 +296,29 @@ export function TicketComments({
 
       <form
         onSubmit={handleCreateComment}
-        className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+        className="rounded-xl border border-slate-800 bg-slate-900 p-4"
       >
         <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
           Add Comment
         </p>
-        <div className="mt-3 space-y-3">
+        <div className="mt-3 space-y-2">
           <input
             value={author}
             onChange={(event) => setAuthor(event.target.value)}
             placeholder="Your name"
-            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
+            className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-sky-500/70"
           />
           <textarea
             value={content}
             onChange={(event) => setContent(event.target.value)}
             rows={3}
             placeholder="Share an update on this ticket"
-            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
+            className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-sky-500/70"
           />
           <button
             type="submit"
             disabled={isSubmitting}
-            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-wait disabled:bg-slate-400"
+            className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-500 disabled:cursor-wait disabled:opacity-70"
           >
             {isSubmitting ? 'Posting...' : 'Add Comment'}
           </button>

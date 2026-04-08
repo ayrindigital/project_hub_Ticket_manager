@@ -36,16 +36,15 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
     return (
       <section>
-        <header className="mb-6 rounded-xl border border-slate-200 bg-white/80 p-5 shadow-sm backdrop-blur">
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-slate-500">Day 7 Frontend</p>
-          <h2 className="mt-2 text-3xl font-semibold text-slate-900">Projects Dashboard</h2>
-          <p className="mt-2 max-w-2xl text-sm text-slate-600">
+        <header className="mb-6 rounded-xl border border-slate-800 bg-slate-900/80 p-5 shadow-sm backdrop-blur">
+          <h2 className="mt-2 text-3xl font-semibold text-slate-100">Projects Dashboard</h2>
+          <p className="mt-2 max-w-2xl text-sm text-slate-500">
             Search, filter, create, and open projects from a single dashboard backed by the
             NestJS API.
           </p>
           <Link
             href="/projects/new"
-            className="mt-4 inline-flex rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
+            className="mt-4 inline-flex rounded-md bg-sky-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-sky-500"
           >
             New Project
           </Link>
@@ -54,7 +53,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         </header>
 
         {filteredProjects.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-600">
+          <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900 p-6 text-sm text-slate-500">
             {query || statusFilter !== 'ALL'
               ? 'No projects match the current search or status filter.'
               : 'No projects found yet. Create your first one from the dashboard.'}

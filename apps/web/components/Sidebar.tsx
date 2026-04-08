@@ -5,9 +5,16 @@ const navItems = [
   { href: '/chat', label: 'AI Chat' },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  className?: string;
+  onNavigate?: () => void;
+}
+
+export function Sidebar({ className = '', onNavigate }: SidebarProps) {
   return (
-    <aside className="w-full border-r border-slate-200 bg-white/70 px-4 py-6 backdrop-blur md:w-72">
+    <aside
+      className={`w-full border-slate-800 bg-slate-900/85 px-4 py-6 backdrop-blur ${className}`}
+    >
       <div className="mb-8 rounded-xl bg-slate-900 px-4 py-3 text-white shadow-md">
         <p className="text-xs uppercase tracking-[0.2em] text-slate-300">ProjectHub</p>
         <h1 className="text-xl font-semibold">Intern Workspace</h1>
@@ -18,16 +25,13 @@ export function Sidebar() {
           <Link
             key={item.href}
             href={item.href}
-            className="block rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
+            onClick={onNavigate}
+            className="block rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm font-medium text-slate-300 transition hover:border-slate-600 hover:text-slate-100"
           >
             {item.label}
           </Link>
         ))}
       </nav>
-
-      <p className="mt-8 text-xs text-slate-500">
-        Day 13 goal: chat with project data and navigate to cited tickets.
-      </p>
     </aside>
   );
 }

@@ -80,32 +80,32 @@ export function ProjectForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <label className="block">
-        <span className="mb-1 block text-sm font-medium text-slate-700">Project Name</span>
+        <span className="mb-1 block text-sm font-medium text-slate-300">Project Name</span>
         <input
           value={name}
           onChange={(event) => setName(event.target.value)}
           placeholder="Project Alpha"
-          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
+          className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-slate-500"
         />
       </label>
 
       <label className="block">
-        <span className="mb-1 block text-sm font-medium text-slate-700">Description</span>
+        <span className="mb-1 block text-sm font-medium text-slate-300">Description</span>
         <textarea
           value={description}
           onChange={(event) => setDescription(event.target.value)}
           rows={4}
           placeholder="Short summary of the project goals"
-          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
+          className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-slate-500"
         />
       </label>
 
       <label className="block">
-        <span className="mb-1 block text-sm font-medium text-slate-700">Status</span>
+        <span className="mb-1 block text-sm font-medium text-slate-300">Status</span>
         <select
           value={status}
           onChange={(event) => setStatus(event.target.value as ProjectPayload['status'])}
-          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
+          className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-slate-500"
         >
           <option value="ACTIVE">ACTIVE</option>
           <option value="ARCHIVED">ARCHIVED</option>
@@ -122,7 +122,7 @@ export function ProjectForm({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-wait disabled:bg-slate-400"
+          className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-500 disabled:cursor-wait disabled:bg-sky-900"
         >
           {isSubmitting
             ? mode === 'create'
@@ -138,7 +138,7 @@ export function ProjectForm({
             type="button"
             onClick={onCancel}
             disabled={isSubmitting}
-            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
+            className="rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-medium text-slate-300 transition hover:border-slate-600 hover:text-slate-100"
           >
             Cancel
           </button>

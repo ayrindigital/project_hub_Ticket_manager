@@ -62,7 +62,7 @@ export function DashboardFilters({
   return (
     <form
       onSubmit={handleSubmit}
-      className="mt-5 grid gap-3 rounded-xl border border-slate-200 bg-slate-50/80 p-4 md:grid-cols-[minmax(0,1fr)_180px_auto_auto]"
+      className="mt-5 grid gap-3 rounded-xl border border-slate-800 bg-slate-900/60 p-4 md:grid-cols-[minmax(0,1fr)_180px_auto_auto]"
     >
       <label className="block">
         <span className="mb-1 block text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
@@ -72,7 +72,7 @@ export function DashboardFilters({
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search by project name or description"
-          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-0 transition focus:border-slate-500"
+          className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none ring-0 transition focus:border-slate-500"
         />
       </label>
 
@@ -83,7 +83,7 @@ export function DashboardFilters({
         <select
           value={status}
           onChange={(event) => setStatus(event.target.value as DashboardStatusFilter)}
-          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
+          className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-slate-500"
         >
           <option value="ALL">All projects</option>
           <option value="ACTIVE">Active</option>
@@ -94,7 +94,7 @@ export function DashboardFilters({
       <button
         type="submit"
         disabled={isPending}
-        className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-wait disabled:bg-slate-400"
+        className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-500 disabled:cursor-wait disabled:bg-sky-900"
       >
         {isPending ? 'Applying...' : 'Apply'}
       </button>
@@ -103,7 +103,7 @@ export function DashboardFilters({
         type="button"
         onClick={handleClear}
         disabled={isPending}
-        className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900 disabled:cursor-wait"
+        className="rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-medium text-slate-300 transition hover:border-slate-600 hover:text-slate-100 disabled:cursor-wait"
       >
         Clear
       </button>

@@ -24,18 +24,51 @@ const ticketStatuses: Ticket['status'][] = [
 const priorities: Ticket['priority'][] = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'];
 
 const statusLabels: Record<Ticket['status'], string> = {
-  TODO: 'To Do',
+  TODO: 'New',
   IN_PROGRESS: 'In Progress',
   IN_REVIEW: 'In Review',
   DONE: 'Done',
 };
 
 const priorityClasses: Record<Ticket['priority'], string> = {
-  LOW: 'bg-slate-100 text-slate-700',
-  MEDIUM: 'bg-sky-100 text-sky-800',
-  HIGH: 'bg-amber-100 text-amber-800',
-  URGENT: 'bg-rose-100 text-rose-800',
+  LOW: 'bg-slate-800 text-slate-300',
+  MEDIUM: 'bg-sky-500/20 text-sky-200',
+  HIGH: 'bg-amber-500/20 text-amber-200',
+  URGENT: 'bg-rose-500/20 text-rose-200',
 };
+
+const columnClasses: Record<Ticket['status'], string> = {
+  TODO: 'border-slate-800 bg-slate-900',
+  IN_PROGRESS: 'border-sky-900/60 bg-sky-950/30',
+  IN_REVIEW: 'border-amber-900/60 bg-amber-950/20',
+  DONE: 'border-emerald-900/60 bg-emerald-950/20',
+};
+
+const shortDateFormatter = new Intl.DateTimeFormat('en-GB', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+
+const dateTimeFormatter = new Intl.DateTimeFormat('en-GB', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hour12: false,
+  timeZone: 'UTC',
+});
+
+function formatShortDate(value: string): string {
+  return shortDateFormatter.format(new Date(value));
+}
+
+function formatDateTime(value: string): string {
+  return dateTimeFormatter.format(new Date(value));
+}
 
 interface TicketBoardProps {
   projectId: string;
@@ -170,12 +203,11 @@ export function TicketBoard({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="rounded-xl border border-slate-800 bg-slate-900 p-5 shadow-sm">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Day 8 Tickets UI</p>
-            <h3 className="mt-2 text-xl font-semibold text-slate-900">Ticket Board</h3>
-            <p className="mt-1 text-sm text-slate-600">
+            <h3 className="mt-2 text-xl font-semibold text-slate-100">Ticket Board</h3>
+            <p className="mt-1 text-sm text-slate-500">
               Manage tickets by status, priority, and recent activity.
             </p>
           </div>
@@ -183,7 +215,7 @@ export function TicketBoard({
           <button
             type="button"
             onClick={() => setShowCreateForm((value) => !value)}
-            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
+            className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-500"
           >
             {showCreateForm ? 'Close Form' : 'New Ticket'}
           </button>
@@ -197,7 +229,7 @@ export function TicketBoard({
             <select
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value as Ticket['status'] | 'ALL')}
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
+              className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-slate-500"
             >
               <option value="ALL">All statuses</option>
               {ticketStatuses.map((status) => (
@@ -217,7 +249,7 @@ export function TicketBoard({
               onChange={(event) =>
                 setPriorityFilter(event.target.value as Ticket['priority'] | 'ALL')
               }
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
+              className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-slate-500"
             >
               <option value="ALL">All priorities</option>
               {priorities.map((priority) => (
@@ -237,7 +269,7 @@ export function TicketBoard({
               onChange={(event) =>
                 setSortBy(event.target.value as 'createdAt' | 'updatedAt' | 'priority')
               }
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
+              className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-slate-500"
             >
               <option value="createdAt">Created date</option>
               <option value="updatedAt">Updated date</option>
@@ -252,7 +284,7 @@ export function TicketBoard({
             <select
               value={sortOrder}
               onChange={(event) => setSortOrder(event.target.value as 'asc' | 'desc')}
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
+              className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-slate-500"
             >
               <option value="desc">Descending</option>
               <option value="asc">Ascending</option>
@@ -261,7 +293,7 @@ export function TicketBoard({
         </div>
 
         {showCreateForm ? (
-          <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <div className="mt-5 rounded-xl border border-slate-800 bg-slate-900/50 p-4">
             <p className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
               Create Ticket
             </p>
@@ -281,15 +313,18 @@ export function TicketBoard({
       ) : null}
 
       {isLoading ? (
-        <div className="grid gap-4 xl:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {ticketStatuses.map((status) => (
-            <div key={status} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="h-5 w-24 animate-pulse rounded bg-slate-200" />
+            <div
+              key={status}
+              className={`rounded-xl border p-4 shadow-sm ${columnClasses[status]}`}
+            >
+              <div className="h-5 w-24 animate-pulse rounded bg-slate-700" />
               <div className="mt-4 space-y-3">
                 {Array.from({ length: 2 }).map((_, index) => (
-                  <div key={index} className="rounded-lg border border-slate-200 p-3">
-                    <div className="h-4 w-3/4 animate-pulse rounded bg-slate-200" />
-                    <div className="mt-2 h-4 w-1/2 animate-pulse rounded bg-slate-100" />
+                  <div key={index} className="rounded-lg border border-slate-800 p-3">
+                    <div className="h-4 w-3/4 animate-pulse rounded bg-slate-700" />
+                    <div className="mt-2 h-4 w-1/2 animate-pulse rounded bg-slate-800" />
                   </div>
                 ))}
               </div>
@@ -297,25 +332,24 @@ export function TicketBoard({
           ))}
         </div>
       ) : (
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="grid gap-4 xl:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {groupedTickets.map((column) => (
               <section
                 key={column.status}
-                className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+                className={`rounded-xl border p-4 shadow-sm ${columnClasses[column.status]}`}
               >
                 <div className="flex items-center justify-between gap-3">
-                  <h4 className="text-sm font-semibold text-slate-900">
+                  <h4 className="text-sm font-semibold text-slate-100">
                     {statusLabels[column.status]}
                   </h4>
-                  <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">
+                  <span className="rounded-full bg-slate-800 px-2 py-1 text-xs text-slate-500">
                     {column.tickets.length}
                   </span>
                 </div>
 
                 <div className="mt-4 space-y-3">
                   {column.tickets.length === 0 ? (
-                    <p className="rounded-lg border border-dashed border-slate-200 p-3 text-sm text-slate-500">
+                    <p className="rounded-lg border border-dashed border-slate-800 p-3 text-sm text-slate-500">
                       No tickets in this column.
                     </p>
                   ) : (
@@ -324,8 +358,8 @@ export function TicketBoard({
                         key={ticket.id}
                         className={`rounded-lg border p-3 transition ${
                           selectedTicketId === ticket.id
-                            ? 'border-slate-900 bg-slate-50'
-                            : 'border-slate-200 bg-white hover:border-slate-300'
+                            ? 'border-sky-500/70 bg-slate-800/70 ring-1 ring-sky-500/30'
+                            : 'border-slate-800 bg-slate-900 hover:border-slate-700'
                         }`}
                       >
                         <button
@@ -333,50 +367,24 @@ export function TicketBoard({
                           onClick={() => setSelectedTicketId(ticket.id)}
                           className="w-full text-left"
                         >
-                          <div className="flex items-start justify-between gap-3">
-                            <p className="text-sm font-semibold text-slate-900">{ticket.title}</p>
-                            <span
-                              className={`rounded-md px-2 py-1 text-[11px] font-semibold ${priorityClasses[ticket.priority]}`}
-                            >
-                              {ticket.priority}
-                            </span>
-                          </div>
-                          <p className="mt-2 line-clamp-3 text-sm text-slate-600">
+                          <p className="text-sm font-semibold text-slate-100">{ticket.title}</p>
+                          <p className="mt-2 line-clamp-3 text-sm text-slate-500">
                             {ticket.description || 'No description yet.'}
                           </p>
                         </button>
 
-                        <div className="mt-3 flex items-center justify-between gap-3">
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          <span
+                            className={`rounded-md px-2 py-1 text-[11px] font-semibold ${priorityClasses[ticket.priority]}`}
+                          >
+                            {ticket.priority}
+                          </span>
                           <span className="text-xs text-slate-500">
                             {ticket.commentCount} comment{ticket.commentCount === 1 ? '' : 's'}
                           </span>
-                          <span className="text-xs text-slate-400">
-                            Updated {new Date(ticket.updatedAt).toLocaleDateString()}
+                          <span className="text-xs text-slate-500">
+                            Updated {formatShortDate(ticket.updatedAt)}
                           </span>
-                        </div>
-
-                        <div className="mt-3 flex items-center justify-between gap-3">
-                          <select
-                            value={ticket.status}
-                            onChange={(event) =>
-                              handleUpdateTicket(ticket.id, {
-                                status: event.target.value as Ticket['status'],
-                              }).catch((error) =>
-                                setBoardError(
-                                  error instanceof ApiError
-                                    ? error.message
-                                    : 'Could not update ticket status.',
-                                ),
-                              )
-                            }
-                            className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 outline-none transition focus:border-slate-500"
-                          >
-                            {ticketStatuses.map((status) => (
-                              <option key={status} value={status}>
-                                {statusLabels[status]}
-                              </option>
-                            ))}
-                          </select>
                         </div>
                       </article>
                     ))
@@ -384,30 +392,38 @@ export function TicketBoard({
                 </div>
               </section>
             ))}
-          </div>
-
-          <aside className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            {selectedTicket ? (
-              <TicketDetailPanel
-                ticket={selectedTicket}
-                onDelete={handleDeleteTicket}
-                onUpdate={handleUpdateTicket}
-                onCommentCountChange={(nextCount) =>
-                  updateTicketInState(selectedTicket.id, (currentTicket) => ({
-                    ...currentTicket,
-                    commentCount: nextCount,
-                    updatedAt: new Date().toISOString(),
-                  }))
-                }
-              />
-            ) : (
-              <div className="flex h-full min-h-72 items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500">
-                Select a ticket card to view details, edit fields, or delete it.
-              </div>
-            )}
-          </aside>
         </div>
       )}
+
+      {selectedTicket ? (
+        <>
+          <button
+            type="button"
+            aria-label="Close ticket details"
+            onClick={() => setSelectedTicketId(null)}
+            className="fixed inset-0 z-40 bg-slate-950/65 backdrop-blur-[2px]"
+          />
+          <aside className="fixed inset-y-0 right-0 z-50 w-full max-w-2xl overflow-y-auto border-l border-slate-800 bg-slate-900 p-5 shadow-2xl">
+            <TicketDetailPanel
+              ticket={selectedTicket}
+              onClose={() => setSelectedTicketId(null)}
+              onDelete={handleDeleteTicket}
+              onUpdate={handleUpdateTicket}
+              onCommentCountChange={(nextCount) =>
+                updateTicketInState(selectedTicket.id, (currentTicket) => ({
+                  ...currentTicket,
+                  status:
+                    nextCount > 0 && currentTicket.status === 'TODO'
+                      ? 'IN_PROGRESS'
+                      : currentTicket.status,
+                  commentCount: nextCount,
+                  updatedAt: new Date().toISOString(),
+                }))
+              }
+            />
+          </aside>
+        </>
+      ) : null}
     </div>
   );
 }
@@ -461,33 +477,33 @@ function TicketForm({ mode, initialTicket, onCancel, onSubmit }: TicketFormProps
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <label className="block">
-        <span className="mb-1 block text-sm font-medium text-slate-700">Title</span>
+        <span className="mb-1 block text-sm font-medium text-slate-300">Title</span>
         <input
           value={title}
           onChange={(event) => setTitle(event.target.value)}
           placeholder="Fix login bug"
-          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
+          className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-slate-500"
         />
       </label>
 
       <label className="block">
-        <span className="mb-1 block text-sm font-medium text-slate-700">Description</span>
+        <span className="mb-1 block text-sm font-medium text-slate-300">Description</span>
         <textarea
           value={description}
           onChange={(event) => setDescription(event.target.value)}
           rows={4}
           placeholder="Describe the task or issue"
-          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
+          className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-slate-500"
         />
       </label>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="block">
-          <span className="mb-1 block text-sm font-medium text-slate-700">Status</span>
+          <span className="mb-1 block text-sm font-medium text-slate-300">Status</span>
           <select
             value={status}
             onChange={(event) => setStatus(event.target.value as Ticket['status'])}
-            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
+            className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-slate-500"
           >
             {ticketStatuses.map((ticketStatus) => (
               <option key={ticketStatus} value={ticketStatus}>
@@ -498,11 +514,11 @@ function TicketForm({ mode, initialTicket, onCancel, onSubmit }: TicketFormProps
         </label>
 
         <label className="block">
-          <span className="mb-1 block text-sm font-medium text-slate-700">Priority</span>
+          <span className="mb-1 block text-sm font-medium text-slate-300">Priority</span>
           <select
             value={priority}
             onChange={(event) => setPriority(event.target.value as Ticket['priority'])}
-            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
+            className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-slate-500"
           >
             {priorities.map((ticketPriority) => (
               <option key={ticketPriority} value={ticketPriority}>
@@ -523,7 +539,7 @@ function TicketForm({ mode, initialTicket, onCancel, onSubmit }: TicketFormProps
         <button
           type="submit"
           disabled={isSubmitting}
-          className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-wait disabled:bg-slate-400"
+          className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-500 disabled:cursor-wait disabled:bg-sky-900"
         >
           {isSubmitting
             ? mode === 'create'
@@ -538,7 +554,7 @@ function TicketForm({ mode, initialTicket, onCancel, onSubmit }: TicketFormProps
             type="button"
             onClick={onCancel}
             disabled={isSubmitting}
-            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
+            className="rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-medium text-slate-300 transition hover:border-slate-600 hover:text-slate-100"
           >
             Cancel
           </button>
@@ -550,6 +566,7 @@ function TicketForm({ mode, initialTicket, onCancel, onSubmit }: TicketFormProps
 
 interface TicketDetailPanelProps {
   ticket: TicketSummary;
+  onClose: () => void;
   onUpdate: (ticketId: string, payload: TicketPayload) => Promise<void>;
   onDelete: (ticketId: string) => Promise<void>;
   onCommentCountChange: (nextCount: number) => void;
@@ -557,6 +574,7 @@ interface TicketDetailPanelProps {
 
 function TicketDetailPanel({
   ticket,
+  onClose,
   onUpdate,
   onDelete,
   onCommentCountChange,
@@ -587,31 +605,49 @@ function TicketDetailPanel({
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Ticket Detail</p>
-          <h4 className="mt-2 text-xl font-semibold text-slate-900">{ticket.title}</h4>
+          <h4 className="mt-2 text-xl font-semibold text-slate-100">{ticket.title}</h4>
         </div>
-        <span className={`rounded-md px-2 py-1 text-xs font-semibold ${priorityClasses[ticket.priority]}`}>
-          {ticket.priority}
-        </span>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md border border-slate-700 bg-slate-900 px-2.5 py-1 text-xs font-medium text-slate-300 transition hover:border-slate-600 hover:text-slate-100"
+          >
+            Back
+          </button>
+          <span
+            className={`rounded-md px-2 py-1 text-xs font-semibold ${priorityClasses[ticket.priority]}`}
+          >
+            {ticket.priority}
+          </span>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-300 transition hover:border-slate-600 hover:text-slate-100"
+          >
+            Close
+          </button>
+        </div>
       </div>
 
-      <div className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+      <div className="grid gap-3 rounded-xl border border-slate-800 bg-slate-900/50 p-4 text-sm text-slate-300">
         <p>
-          <span className="font-medium text-slate-900">Status:</span> {statusLabels[ticket.status]}
+          <span className="font-medium text-slate-100">Status:</span> {statusLabels[ticket.status]}
         </p>
         <p>
-          <span className="font-medium text-slate-900">Created:</span>{' '}
-          {new Date(ticket.createdAt).toLocaleString()}
+          <span className="font-medium text-slate-100">Created:</span>{' '}
+          {formatDateTime(ticket.createdAt)}
         </p>
         <p>
-          <span className="font-medium text-slate-900">Updated:</span>{' '}
-          {new Date(ticket.updatedAt).toLocaleString()}
+          <span className="font-medium text-slate-100">Updated:</span>{' '}
+          {formatDateTime(ticket.updatedAt)}
         </p>
         <p>
-          <span className="font-medium text-slate-900">Comments:</span> {ticket.commentCount}
+          <span className="font-medium text-slate-100">Comments:</span> {ticket.commentCount}
         </p>
       </div>
 
-      <p className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600">
+      <p className="rounded-xl border border-slate-800 bg-slate-900 p-4 text-sm text-slate-500">
         {ticket.description || 'No description available for this ticket yet.'}
       </p>
 
@@ -619,7 +655,7 @@ function TicketDetailPanel({
 
       <Link
         href={`/chat?prompt=${encodeURIComponent(`Tell me about ticket ${ticket.title}`)}`}
-        className="inline-flex rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
+        className="inline-flex rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm font-medium text-slate-300 transition hover:border-slate-600 hover:text-slate-100"
       >
         Ask AI About This Ticket
       </Link>
@@ -637,7 +673,7 @@ function TicketDetailPanel({
             setError(null);
             setIsEditing((value) => !value);
           }}
-          className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
+          className="rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-medium text-slate-300 transition hover:border-slate-600 hover:text-slate-100"
         >
           {isEditing ? 'Close Editor' : 'Edit Ticket'}
         </button>
@@ -652,7 +688,7 @@ function TicketDetailPanel({
       </div>
 
       {isEditing ? (
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+        <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
           <p className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
             Edit Ticket
           </p>

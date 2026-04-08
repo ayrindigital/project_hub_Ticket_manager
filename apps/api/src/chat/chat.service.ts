@@ -1180,23 +1180,55 @@ export class ChatService {
       return 'I don\'t have information about that in the project data.';
     }
 
-    const lines: string[] = [
-      `Answer for: ${question}`,
-      '',
-      'Tool observations:',
-    ];
+    const ticketSources = sources.filter((source) => source.sourceType === 'ticket');
+    const commentSources = sources.filter((source) => source.sourceType === 'comment');
+    const projectSources = sources.filter((source) => source.sourceType === 'project');
 
-    steps.forEach((step, index) => {
-      lines.push(`${index + 1}. ${step.tool} -> ${step.output.slice(0, 220)}`);
-    });
+    const lines: string[] = [`Here is what I found for: ${question}`];
 
-    lines.push('', 'Sources:');
-    sources.slice(0, 5).forEach((source, index) => {
-      lines.push(
-        `[S${index + 1}] ${source.sourceType} ${source.sourceId}: ${source.snippet}`,
-      );
-    });
+    if (ticketSources.length > 0) {
+      lines.push('', 'Relevant tickets:');
+      ticketSources.slice(0, 5).forEach((source) => {
+        const ticketTitle =
+          this.readString(source.metadata?.ticketTitle) ??
+          source.snippet.split(':')[0] ??
+          source.sourceId;
+        const projectName = this.readString(source.metadata?.projectName);
+        const status = this.readString(source.metadata?.status);
+        const priority = this.readString(source.metadata?.priority);
 
+        const details = [status, priority].filter(Boolean).join(', ');
+        lines.push(
+          `- ${ticketTitle}${projectName ? ` (${projectName})` : ''}${details ? ` - ${details}` : ''}`,
+        );
+      });
+    }
+
+    if (commentSources.length > 0) {
+      lines.push('', 'Recent comment signals:');
+      commentSources.slice(0, 3).forEach((source) => {
+        const author = this.readString(source.metadata?.author);
+        const ticketTitle = this.readString(source.metadata?.ticketTitle);
+        lines.push(
+          `- ${author ?? 'Comment'}${ticketTitle ? ` on ${ticketTitle}` : ''}: ${source.snippet}`,
+        );
+      });
+    }
+
+    if (projectSources.length > 0 && ticketSources.length === 0) {
+      lines.push('', 'Relevant projects:');
+      projectSources.slice(0, 3).forEach((source) => {
+        const projectName =
+          this.readString(source.metadata?.projectName) ?? source.sourceId;
+        lines.push(`- ${projectName}: ${source.snippet}`);
+      });
+    }
+
+    if (steps.length > 0) {
+      lines.push('', `Checked ${steps.length} data retrieval step(s) for this answer.`);
+    }
+
+    lines.push('', 'Use the source chips below to open the related ticket or project directly.');
     return lines.join('\n');
   }
 

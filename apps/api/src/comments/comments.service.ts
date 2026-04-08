@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Comment } from '@prisma/client';
+import { Comment, TicketStatus } from '@prisma/client';
 import { EMBEDDING_PROJECT_SYNC_EVENT } from '../embeddings/embedding.events';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
@@ -21,6 +21,10 @@ export class CommentsService {
         content: dto.content,
         author: dto.author,
       },
+    });
+    await this.prisma.ticket.updateMany({
+      where: { id: ticketId, status: TicketStatus.TODO },
+      data: { status: TicketStatus.IN_PROGRESS },
     });
     await this.emitProjectSync(ticket.projectId, 'comment.created');
     return comment;
