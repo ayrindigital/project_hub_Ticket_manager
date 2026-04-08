@@ -8,7 +8,7 @@ import {
   Res,
 } from '@nestjs/common';
 import { ChatMessage } from '@prisma/client';
-import { Response } from 'express';
+import type { Response } from 'express';
 import { ChatService, type ChatReply } from './chat.service';
 import { CreateChatDto } from './dto/create-chat.dto';
 
